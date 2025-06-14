@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import confetti from "canvas-confetti";
 import Sidebar from "../components/Sidebar";
+import MatchHistoryModal from "../components/HistoryModal";
 
 const getRandomId = () => Math.floor(Math.random() * 150) + 1;
 
@@ -43,6 +44,15 @@ const PokemonCardGame = () => {
   const [username, setUsername] = useState(localStorage.getItem("username") || "");
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(!localStorage.getItem("username"));
 const [musicPlaying, setMusicPlaying] = useState(false);
+
+
+
+const [wins, setWins] = useState(0);
+const [losses, setLosses] = useState(0);
+const [draws, setDraws] = useState(0);
+const [totalGames, setTotalGames] = useState(0);
+
+
 
   const winAudio = new Audio("/win.wav");
   const loseAudio = new Audio("/lose.wav");
@@ -210,6 +220,22 @@ loseAudio.volume = 1;
       }, 1500);
     }
   };
+useEffect(() => {
+  const savedHistory = JSON.parse(localStorage.getItem('matchHistory')) || [];
+  const savedUsername = localStorage.getItem('username') || 'faisal';
+
+  setMatchHistory(savedHistory);
+  setUsername(savedUsername);
+
+  const winCount = savedHistory.filter((m) => m.result.includes("won")).length;
+  const lossCount = savedHistory.filter((m) => m.result.includes("lost")).length;
+  const drawCount = savedHistory.filter((m) => m.result.includes("draw")).length;
+
+  setWins(winCount);
+  setLosses(lossCount);
+  setDraws(drawCount);
+  setTotalGames(savedHistory.length);
+}, []);
 
   const restartGame = () => {
     setRound(1);
@@ -368,60 +394,84 @@ loseAudio.volume = 1;
   {musicPlaying ? "🔇 Pause Music" : "🎵 Play Music"}
 </button>
 
-
         {showHistory && (
-          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-[90%] max-w-xl bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg z-50">
-            <button
-              onClick={() => setShowHistory(false)}
-              className="absolute top-3 right-4 text-xl text-gray-500 hover:text-red-500"
-            >
-              ❌
-            </button>
-            <h3 className="text-xl font-semibold mb-4 text-gray-700 dark:text-white">🕹️ Past Matches</h3>
-            <ul className="max-h-60 overflow-y-auto text-left text-sm text-gray-700 dark:text-gray-300 space-y-2">
-              {paginatedHistory.map((m, index) => (
-                <li key={index}>
-                  <b>{m.timestamp}</b>: {m.result}
-                </li>
-              ))}
-            </ul>
-            <div className="flex justify-center items-center gap-2 mt-4">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => prev - 1)}
-                className={`px-2 py-1 rounded-md ${
-                  currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-gray-200 hover:bg-gray-300"
-                }`}
-              >
-                ⬅️
-              </button>
+  <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-[90%] max-w-xl bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg z-50">
+    <button
+      onClick={() => setShowHistory(false)}
+      className="absolute top-3 right-4 text-xl text-gray-500 hover:text-red-500"
+    >
+      ❌
+    </button>
 
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === i + 1
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-200 hover:bg-gray-300"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+    <h3 className="text-xl font-semibold mb-4 text-gray-700 dark:text-white">🕹️ Past Matches</h3>
 
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => prev + 1)}
-                className={`px-2 py-1 rounded-md ${
-                  currentPage === totalPages ? "bg-gray-300 cursor-not-allowed" : "bg-gray-200 hover:bg-gray-300"
-                }`}
-              >
-                ➡️
-              </button>
-            </div>
-          </div>
-        )}
+    {/* Stats Header */}
+    <div className="text-sm text-gray-800 dark:text-gray-200 mb-4 text-center">
+  <p>👤 Username: <strong>{username}</strong></p>
+  <p>
+    ✅ Wins: <strong>{wins}</strong> | ❌ Losses: <strong>{losses}</strong> | 🤝 Draws: <strong>{draws}</strong> | 🎮 Games: <strong>{totalGames}</strong>
+  </p>
+
+  {/* Share & Home */}
+  <div className="flex justify-center flex-wrap gap-3 mt-3">
+    <a
+      href={`https://wa.me/?text=👤 ${username}'s Match Stats:%0A✅ Wins: ${wins}%0A❌ Losses: ${losses}%0A🤝 Draws: ${draws}%0A🎮 Total Games: ${totalGames}%0APlay now: ${window.location.origin}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-block bg-green-600 text-white px-4 py-1 rounded-md hover:bg-green-700"
+    >
+      📤 Share on WhatsApp
+    </a>
+    <a
+      href="/"
+      className="inline-block bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700"
+    >
+      🏠 Back to Home
+    </a>
+  </div>
+</div>
+
+
+    {/* Match List */}
+    <ul className="max-h-60 overflow-y-auto text-left text-sm text-gray-700 dark:text-gray-300 space-y-2">
+      {paginatedHistory.map((m, index) => (
+        <li key={index}>
+          <b>{m.timestamp}</b>: {m.result}
+        </li>
+      ))}
+    </ul>
+
+    {/* Pagination */}
+    <div className="flex justify-center items-center gap-2 mt-4">
+      <button
+        disabled={currentPage === 1}
+        onClick={() => setCurrentPage((prev) => prev - 1)}
+        className={`px-2 py-1 rounded-md ${currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-gray-200 hover:bg-gray-300"}`}
+      >
+        ⬅️
+      </button>
+
+      {Array.from({ length: totalPages }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i + 1)}
+          className={`px-3 py-1 rounded-md ${currentPage === i + 1 ? "bg-green-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+        >
+          {i + 1}
+        </button>
+      ))}
+
+      <button
+        disabled={currentPage === totalPages}
+        onClick={() => setCurrentPage((prev) => prev + 1)}
+        className={`px-2 py-1 rounded-md ${currentPage === totalPages ? "bg-gray-300 cursor-not-allowed" : "bg-gray-200 hover:bg-gray-300"}`}
+      >
+        ➡️
+      </button>
+    </div>
+  </div>
+)}
+
 
         {!gameOver && (
           <>
@@ -500,16 +550,18 @@ loseAudio.volume = 1;
               </button>
               <h2 className="text-xl font-bold mb-4">🆘 Help - Pokémon Card Battle</h2>
               <ol className="list-decimal list-inside space-y-2 text-sm">
-                <li>Each match has <strong>3 rounds</strong>.</li>
-                <li>Choose 1 of 3 Pokémon cards each round.</li>
-                <li>Their attack is compared to the computer’s Pokémon.</li>
-                <li>Win the round if your attack is higher.</li>
-                <li>After 3 rounds, overall winner is declared.</li>
-                <li>Your battle history is saved and viewable anytime using the 📜 <strong>Show History</strong> button.</li>
-                <li>Use the 🎵 <strong>Play/Pause Music</strong> button to toggle background music.</li>
-                <li>🏆 <strong>Leaderboard</strong> displays top 100 global players. If you're not in top 100, your rank still shows at the bottom!</li>
-                <li>You can restart the game anytime after a match ends.</li>
-              </ol>
+  <li>Each match has <strong>3 rounds</strong>.</li>
+  <li>Choose 1 of 3 Pokémon cards each round.</li>
+  <li>Their attack is compared to the computer’s Pokémon.</li>
+  <li>Win the round if your attack is higher.</li>
+  <li>After 3 rounds, overall winner is declared.</li>
+  <li>Your battle history is saved and viewable anytime using the 📜 <strong>Show History</strong> button.</li>
+  <li>Use the 🎵 <strong>Play/Pause Music</strong> button to toggle background music.</li>
+  <li>🏆 <strong>Leaderboard</strong> displays top 100 global players. If you're not in top 100, your rank still shows at the bottom!</li>
+  <li>You can restart the game anytime after a match ends.</li>
+  <li>📤 <strong>Share your match stats on WhatsApp</strong> directly from the History screen!</li>
+</ol>
+
               <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
                 Enjoy your battle and good luck!
               </p>
