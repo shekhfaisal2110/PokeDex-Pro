@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import confetti from "canvas-confetti";
 import Sidebar from "../components/Sidebar";
-import MatchHistoryModal from "../components/HistoryModal";
 
 const getRandomId = () => Math.floor(Math.random() * 150) + 1;
 
